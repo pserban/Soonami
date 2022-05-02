@@ -1,6 +1,7 @@
 package com.example.android.soonami;
 
 import android.os.AsyncTask;
+import android.text.TextUtils;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -78,6 +79,12 @@ public class TsunamiAsyncTask extends AsyncTask<URL, Void, Event> {
      */
     private String makeHttpRequest(URL url) throws IOException {
         String jsonResponse = "";
+
+        // If the URL is null, then return early.
+        if (url == null) {
+            return jsonResponse;
+        }
+
         HttpURLConnection urlConnection = null;
         InputStream inputStream = null;
         try {
@@ -86,10 +93,13 @@ public class TsunamiAsyncTask extends AsyncTask<URL, Void, Event> {
             urlConnection.setReadTimeout(10000);
             urlConnection.setConnectTimeout(15000);
             urlConnection.connect();
-            inputStream = urlConnection.getInputStream();
-            jsonResponse = readFromStream(inputStream);
+            if (urlConnection.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                inputStream = urlConnection.getInputStream();
+                jsonResponse = readFromStream(inputStream);
+            }
         } catch (IOException e) {
             // TODO: Handle the exception
+            Log.e(LOG_TAG, "Error when trying to access " + url.getPath());
         } finally {
             if (urlConnection != null) {
                 urlConnection.disconnect();
@@ -125,6 +135,11 @@ public class TsunamiAsyncTask extends AsyncTask<URL, Void, Event> {
      * about the first earthquake from the input earthquakeJSON string.
      */
     private Event extractFeatureFromJSON(String earthquakeJSON) {
+        // If the JSON string is empty or null, then return early.
+        if (TextUtils.isEmpty(earthquakeJSON)) {
+            return null;
+        }
+
         try {
             JSONObject baseJsonResponse = new JSONObject(earthquakeJSON);
             JSONArray featureArray = baseJsonResponse.getJSONArray("features");
