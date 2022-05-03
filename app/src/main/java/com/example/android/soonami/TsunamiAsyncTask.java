@@ -93,13 +93,16 @@ public class TsunamiAsyncTask extends AsyncTask<URL, Void, Event> {
             urlConnection.setReadTimeout(10000);
             urlConnection.setConnectTimeout(15000);
             urlConnection.connect();
-            if (urlConnection.getResponseCode() == HttpURLConnection.HTTP_OK) {
+            int responseCode = urlConnection.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
                 inputStream = urlConnection.getInputStream();
                 jsonResponse = readFromStream(inputStream);
+            } else {
+                Log.e(LOG_TAG, "ERROR: HTTP response code not HTTP_OK: " + responseCode);
             }
         } catch (IOException e) {
             // TODO: Handle the exception
-            Log.e(LOG_TAG, "Error when trying to access " + url.getPath());
+            Log.e(LOG_TAG, "Error when trying to access " + url.toString());
         } finally {
             if (urlConnection != null) {
                 urlConnection.disconnect();
